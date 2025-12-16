@@ -12,6 +12,10 @@ jobs:
   ssh:
     runs-on: ${{ inputs.runs-on }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Run action
+        uses: ./
       - name: Enable ssh access
         uses: mxschmitt/action-tmate@v3
         with:
