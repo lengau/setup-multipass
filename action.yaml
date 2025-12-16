@@ -12,6 +12,8 @@ runs:
       shell: bash
       run: |
         sudo snap install multipass
+        sudo multipass set local.passphrase="${GITHUB_TOKEN}"
+        multipass authenticate "${GITHUB_TOKEN}"
     - if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
