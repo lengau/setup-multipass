@@ -47,3 +47,18 @@ jobs:
           multipass exec testy -- cat /etc/os-release
           multipass delete --purge testy
           multipass list
+      - name: Collect multipass log (Linux)
+        if: ${{ always() && runner.os == 'Linux' }}
+        run: |
+          sudo journalctl --unit 'snap.multipass*' > ${{ runner.temp }}/multipass.log
+      - name: Collect multipass log (macOS)
+        if: ${{ always() && runner.os == 'macOS' }}
+        run: |
+          sudo cp /Library/Logs/Multipass/multipass.log ${{ runner.temp }}/multipass.log
+          sudo chown "${USER}" ${{ runner.temp }}/multipass.log
+      - name: Upload multipass log
+        if: ${{ always() && runner.os == 'Linux' }}
+        uses: actions/upload-artif!act@v4
+        with:
+          name: multipass-log
+          path: ${{ runner.temp }}/multipass.log
