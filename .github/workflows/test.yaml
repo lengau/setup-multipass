@@ -47,15 +47,15 @@ jobs:
       - name: Collect multipass log (Linux)
         if: ${{ always() && runner.os == 'Linux' }}
         run: |
-          sudo journalctl --unit 'snap.multipass*' > ${{ runner.temp }}/multipass.log
+          sudo journalctl --unit 'snap.multipass*' > ${{ runner.temp }}/multipassd.log
       - name: Collect multipass log (macOS)
         if: ${{ always() && runner.os == 'macOS' }}
         run: |
-          sudo cp /Library/Logs/Multipass/multipass.log ${{ runner.temp }}/multipass.log
-          sudo chown "${USER}" ${{ runner.temp }}/multipass.log
+          sudo cp /Library/Logs/Multipass/multipassd.log ${{ runner.temp }}/multipassd.log
+          sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
       - name: Upload multipass log
         if: ${{ always() && runner.os == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
           name: multipass-log-${{ matrix.os }}-${{ job.check_run_id }}
-          path: ${{ runner.temp }}/multipass.log
+          path: ${{ runner.temp }}/multipassd.log
