@@ -57,5 +57,5 @@ jobs:
         if: ${{ always() && runner.os == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          name: multipass-log
+          name: multipass-log-${{ matrix.os }}
           path: ${{ runner.temp }}/multipass.log
