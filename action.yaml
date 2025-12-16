@@ -12,10 +12,7 @@ runs:
       shell: bash
       run: |
         sudo snap install multipass
-        echo Setting multipass passphrase...
-        sudo multipass set local.passphrase="super_secret"
-        echo Authenticating...
-        multipass authenticate "super_secret"
+        sudo chown adm /var/snap/multipass/common/multipass_socket
     - if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
