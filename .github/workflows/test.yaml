@@ -40,7 +40,7 @@ jobs:
       - name: Test multipass
         run: |
           multipass list
-          for guest in 22.04 24.04 25.10 daily:26.04 trixie fedora; do
+          for guest in $(multipass find --format csv --show-unsupported|cut -d, -f1| tail -n +2); do
             echo starting "${guest}"
             multipass launch --name testy "${guest}"
             multipass exec testy -- cat /etc/os-release
