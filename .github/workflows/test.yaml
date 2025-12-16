@@ -41,6 +41,7 @@ jobs:
         run: |
           multipass list
           for guest in 22.04 24.04 25.10 daily:26.04 trixie fedora; do
+            echo starting "${guest}"
             multipass launch --name testy "${guest}"
             multipass exec testy -- cat /etc/os-release
             multipass delete --purge testy
