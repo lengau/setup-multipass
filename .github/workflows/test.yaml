@@ -54,7 +54,7 @@ jobs:
           sudo cp /Library/Logs/Multipass/multipassd.log ${{ runner.temp }}/multipassd.log
           sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
       - name: Upload multipass log
-        if: ${{ always() && runner.os == 'Linux' }}
+        if: ${{ always()  }}
         uses: actions/upload-artifact@v4
         with:
           name: multipass-log-${{ matrix.os }}-${{ job.check_run_id }}
