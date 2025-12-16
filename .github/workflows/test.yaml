@@ -1,0 +1,48 @@
+name: Test action
+on:
+  schedule:
+    # Every Monday at 00:00 UTC
+    - cron: "0 0 * * 1"
+  pull_request:
+  push:
+    branch:
+      - main
+
+  # Allows triggering the workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      enable_ssh_access:
+        type: boolean
+        description: "Enable ssh access"
+        required: false
+        default: false
+
+jobs:
+  ssh:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14-large
+          - macos-15-intel
+          - ubuntu-22.04
+          - ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Run action
+        uses: ./
+      - name: Enable ssh access
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.enable_ssh_access }}
+        with:
+          limit-access-to-actor: true
+      - name: Test multipass
+        run: |
+          multipass list
+          for os in 18.04 20.04 22.04 24.04 25.10 daily:26.04 trixie fedora; do
+            multipass launch --name testy $os
+            multipass exec testy -- cat /etc/os-release
+            multipass delete --purge testy
+          done

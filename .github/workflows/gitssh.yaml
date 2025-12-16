@@ -1,0 +1,18 @@
+name: SSH to runner
+on:
+  workflow_dispatch:
+    inputs:
+      runs-on:
+        type: string
+        description: "What runner to use"
+        required: false
+        default: macos-15-intel
+
+jobs:
+  ssh:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - name: Enable ssh access
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true

@@ -1,0 +1,26 @@
+name: Setup Multipass
+description: Set up Multipass on a GitHub runner
+inputs:
+  wait:
+    description: Wait for Multipass to complete install and startup
+    default: true
+
+runs:
+  using: "composite"
+  steps:
+    - if: ${{ runner.os == 'Linux' }}
+      shell: bash
+      run: |
+        sudo snap install multipass
+    - if: ${{ runner.os == 'macOS' }}
+      shell: bash
+      run: |
+        curl -o ${{ runner.temp }}/multipass.pkg https://canonical.com/multipass/download/macos
+        sudo installer -pkg ./multipass.pkg -target /
+    - if: ${{ inputs.wait == 'true' }}
+      shell: bash
+      run: |
+        echo Waiting until Multipass is up...
+        while ! multipass list; do
+          sleep 1
+        done
