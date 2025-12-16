@@ -16,7 +16,7 @@ runs:
       shell: bash
       run: |
         curl -o ${{ runner.temp }}/multipass.pkg https://canonical.com/multipass/download/macos
-        sudo installer -pkg ./multipass.pkg -target /
+        sudo installer -pkg ${{ runner.temp }}/multipass.pkg -target /
     - if: ${{ inputs.wait == 'true' }}
       shell: bash
       run: |
