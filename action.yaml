@@ -25,3 +25,5 @@ runs:
         while ! multipass list; do
           sleep 1
         done
+        echo Updating multipass remotes...
+        multipass find --force-update
