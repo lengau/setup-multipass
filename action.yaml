@@ -12,14 +12,16 @@ runs:
       shell: bash
       run: |
         sudo snap install multipass
-        sudo multipass set local.passphrase="${GITHUB_TOKEN}"
-        multipass authenticate "${GITHUB_TOKEN}"
     - if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
         curl -o ${{ runner.temp }}/multipass.pkg -L https://canonical.com/multipass/download/macos
         sudo installer -pkg ${{ runner.temp }}/multipass.pkg -target /
+    - shell: bash
+      run: |
+        echo Setting multipass passphrase...
         sudo multipass set local.passphrase="${GITHUB_TOKEN}"
+        echo Authenticating...
         multipass authenticate "${GITHUB_TOKEN}"
     - if: ${{ inputs.wait == 'true' }}
       shell: bash
