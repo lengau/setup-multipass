@@ -40,7 +40,7 @@ jobs:
       - name: Test multipass
         run: |
           multipass list
-          for os in 18.04 20.04 22.04 24.04 25.10 daily:26.04 trixie fedora; do
+          for os in 22.04 24.04 25.10 daily:26.04 trixie fedora; do
             multipass launch --name testy $os
             multipass exec testy -- cat /etc/os-release
             multipass delete --purge testy
