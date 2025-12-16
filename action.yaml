@@ -12,7 +12,7 @@ runs:
       shell: bash
       run: |
         sudo snap install multipass
-        sudo chown adm /var/snap/multipass/common/multipass_socket
+        sudo chown "${USER}:$(groups | cut -d' ' -f1)" /var/snap/multipass/common/multipass_socket
     - if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
