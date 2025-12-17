@@ -26,6 +26,8 @@ jobs:
           - macos-15-intel
           - ubuntu-22.04
           - ubuntu-24.04
+          - windows-2022
+          - windows-2025
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -38,6 +40,7 @@ jobs:
         with:
           limit-access-to-actor: true
       - name: Test multipass
+        shell: bash
         run: |
           multipass list
           multipass launch --name testy noble
@@ -52,6 +55,12 @@ jobs:
         if: ${{ always() && runner.os == 'macOS' }}
         run: |
           sudo cp /Library/Logs/Multipass/multipassd.log ${{ runner.temp }}/multipassd.log
+          sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
+      - name: Collect multipass log (Windows)
+        if: ${{ always() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          Get-EventLog -LogName 'Windows Logs/Application' -Source Multipass > ${{ runner.temp }}/multipassd.log
           sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
       - name: Upload multipass log
         if: ${{ always()  }}
