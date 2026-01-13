@@ -43,3 +43,4 @@ runs:
         done
         sudo mv /usr/local/bin/multipass /usr/local/bin/multipass-real
         echo '#!/usr/bin/sudo -E /usr/local/bin/multipass-real' | sudo tee /usr/local/bin/multipass
+        sudo chmod a+x /usr/local/bin/multipass
