@@ -33,10 +33,13 @@ runs:
         multipass find --force-update
     - if: ${{ runner.os == 'macOS' }}
       name: Configure runner to run multipass as root
+      # Workaround for https://github.com/canonical/multipass/issues/4588
       shell: bash
       run: |
         multipass_passphrase=$(uuidgen)
         multipass set local.passphrase=$multipass_passphrase
-        sudo multipass authenticate $multipass_passphrase
+        while ! sudo multipass authenticate $multipass_passphrase; do
+          sleep 1
+        done
         sudo mv /usr/local/bin/multipass /usr/local/bin/multipass-real
         echo '#!/usr/bin/sudo -E /usr/local/bin/multipass-real' | sudo tee /usr/local/bin/multipass
