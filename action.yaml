@@ -32,3 +32,12 @@ runs:
         done
         echo Updating multipass remotes...
         multipass find --force-update
+    - if: ${{ runner.os == 'macOS' }}
+      name: Configure runner to run multipass as root
+      shell: bash
+      run: |
+        multipass_passphrase=$(uuidgen)
+        multipass set local.passphrase=$multipass_passphrase
+        sudo multipass authenticate $multipass_passphrase
+        sudo mv /usr/local/bin/multipass /usr/local/bin/multipass-real
+        echo '#!/usr/bin/sudo -E /usr/local/bin/multipass-real' | sudo tee /usr/local/bin/multipass
