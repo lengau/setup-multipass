@@ -65,6 +65,8 @@ runs:
           }
         }
         # Search again after installation
+        Write-Host "Listing files in C:\Program Files\Multipass..."
+        Get-ChildItem -Path "C:\Program Files\Multipass" -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
         $maxRetries = 30
         $retryCount = 0
         $found = $false
