@@ -21,10 +21,17 @@ runs:
       shell: pwsh
       run: |
         curl -o ${{ runner.temp }}\multipass.msi -L https://canonical.com/multipass/download/windows
-        Start-Process msiexec.exe -Wait -ArgumentList "/i", "$($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("${{ runner.temp }}\multipass.msi"))", "/quiet", "/norestart"
-        $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass")
+        $msiPath = "$($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("${{ runner.temp }}\multipass.msi"))"
+        Write-Host "Installing Multipass from $msiPath"
+        $process = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/i", "$msiPath", "/quiet", "/norestart"
+        if ($process.ExitCode -ne 0) {
+          Write-Host "msiexec /i failed with exit code $($process.ExitCode). Trying /a as fallback."
+          Start-Process msiexec.exe -Wait -ArgumentList "/a", "$msiPath", "/quiet", "/norestart"
+        }
+        $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass", "${{ runner.temp }}\Multipass", "${{ runner.temp }}\Multipass\bin")
         foreach ($path in $paths) {
           if (Test-Path $path) {
+            Write-Host "Found Multipass at $path"
             echo "$path" >> $env:GITHUB_PATH
             break
           }
