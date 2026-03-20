@@ -89,6 +89,22 @@ runs:
             }
           }
           if (-not $found) {
+            Write-Host "Searching for multipass.exe on C:..."
+            $foundFile = Get-ChildItem -Path C:\ -Filter multipass.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($foundFile) {
+              $path = Split-Path $foundFile.FullName
+              Write-Host "Found Multipass at $path via recursive search"
+              Add-Content -Path $env:GITHUB_PATH -Value "$path"
+              $env:PATH = "$path;$env:PATH"
+              & "$path\multipass.exe" set local.driver=hyperv
+              $unixPath = $path.Replace("\", "/").Replace("C:", "/c")
+              Add-Content -Path $env:GITHUB_PATH -Value "$unixPath"
+              echo "MULTIPASS_DIR=$unixPath" >> $env:GITHUB_ENV
+              $found = $true
+              break
+            }
+          }
+          if (-not $found) {
             Write-Host "Waiting for Multipass to be installed... ($($retryCount + 1)/$maxRetries)"
             Start-Sleep -Seconds 10
             $retryCount++
