@@ -18,13 +18,15 @@ on:
         default: false
 
 jobs:
-  ssh:
+  test:
     strategy:
       fail-fast: false
       matrix:
         os:
           - macos-15-intel
-          - macos-26-intel
+          - macos-14
+          - macos-13
+          - macos-15
           - ubuntu-22.04
           - ubuntu-24.04
           - windows-2022
@@ -55,13 +57,17 @@ jobs:
       - name: Collect multipass log (macOS)
         if: ${{ always() && runner.os == 'macOS' }}
         run: |
-          sudo cp /Library/Logs/Multipass/multipassd.log ${{ runner.temp }}/multipassd.log
-          sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
+          if [ -f /Library/Logs/Multipass/multipassd.log ]; then
+            sudo cp /Library/Logs/Multipass/multipassd.log ${{ runner.temp }}/multipassd.log
+            sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
+          else
+            echo "No logs found at /Library/Logs/Multipass/multipassd.log"
+          fi
       - name: Collect multipass log (Windows)
         if: ${{ always() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
-          Get-EventLog -LogName 'Windows Logs/Application' -Source Multipass > ${{ runner.temp }}/multipassd.log
+          Get-EventLog -LogName 'Windows Logs/Application' -Source Multipass -ErrorAction SilentlyContinue > ${{ runner.temp }}/multipassd.log
       - name: Upload multipass log
         if: ${{ always()  }}
         uses: actions/upload-artifact@v4

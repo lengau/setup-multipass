@@ -20,8 +20,12 @@ runs:
     - if: ${{ runner.os == 'Windows' }}
       shell: pwsh
       run: |
-        curl -o ${{ runner.temp }}/multipass.msi -L https://canonical.com/multipass/download/windows
-        msiexec.exe /a "${{ runner.temp }}/multipass.msi" /quiet /norestart
+        curl -o ${{ runner.temp }}\multipass.msi -L https://canonical.com/multipass/download/windows
+        Start-Process msiexec.exe -Wait -ArgumentList "/i", "$($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("${{ runner.temp }}\multipass.msi"))", "/quiet", "/norestart"
+        $multipassPath = "C:\Program Files\Multipass\bin"
+        if (Test-Path $multipassPath) {
+          echo "$multipassPath" >> $env:GITHUB_PATH
+        }
     - if: ${{ inputs.wait == 'true' }}
       shell: bash
       run: |
@@ -37,10 +41,11 @@ runs:
       shell: bash
       run: |
         multipass_passphrase=$(uuidgen)
-        multipass set local.passphrase=$multipass_passphrase
+        sudo multipass set local.passphrase=$multipass_passphrase
         while ! sudo multipass authenticate $multipass_passphrase; do
           sleep 1
         done
-        sudo mv /usr/local/bin/multipass /usr/local/bin/multipass-real
-        printf '#!/bin/bash\nexec /usr/bin/sudo -E /usr/local/bin/multipass-real $@' | sudo tee /usr/local/bin/multipass
-        sudo chmod a+x /usr/local/bin/multipass
+        MULTIPASS_BIN=$(which multipass)
+        sudo mv "$MULTIPASS_BIN" "${MULTIPASS_BIN}-real"
+        printf "#!/bin/bash\nexec /usr/bin/sudo -E \"${MULTIPASS_BIN}-real\" \"\$@\"" | sudo tee "$MULTIPASS_BIN"
+        sudo chmod a+x "$MULTIPASS_BIN"
