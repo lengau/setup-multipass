@@ -175,3 +175,5 @@ runs:
         sudo mv "$MULTIPASS_BIN" "${MULTIPASS_BIN}-real"
         printf "#!/bin/bash\nexec /usr/bin/sudo -E \"${MULTIPASS_BIN}-real\" \"\$@\"" | sudo tee "$MULTIPASS_BIN"
         sudo chmod a+x "$MULTIPASS_BIN"
+        # Verify it works
+        "$MULTIPASS_BIN" version
