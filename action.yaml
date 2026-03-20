@@ -75,6 +75,8 @@ runs:
             if (Test-Path "$path\multipass.exe") {
               Write-Host "Found Multipass at $path"
               Add-Content -Path $env:GITHUB_PATH -Value "$path"
+              # Update current process path too
+              $env:PATH = "$path;$env:PATH"
               # Set driver to hyperv
               Write-Host "Setting driver to hyperv..."
               & "$path\multipass.exe" set local.driver=hyperv
