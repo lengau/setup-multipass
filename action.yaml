@@ -88,12 +88,29 @@ runs:
           Write-Error "Multipass not found after installation."
           exit 1
         }
-    - if: ${{ inputs.wait == 'true' }}
+    - if: ${{ inputs.wait == 'true' && runner.os == 'Windows' }}
+      shell: pwsh
+      run: |
+        Write-Host "Waiting until Multipass is up..."
+        $maxWait = 300
+        $elapsed = 0
+        while ($elapsed -lt $maxWait) {
+          if (& multipass list 2>$null) {
+            Write-Host "Multipass is up!"
+            & multipass find --force-update
+            return
+          }
+          Start-Sleep -Seconds 1
+          $elapsed++
+        }
+        Write-Error "Multipass failed to start within $maxWait seconds."
+        exit 1
+    - if: ${{ inputs.wait == 'true' && runner.os != 'Windows' }}
       shell: bash
       run: |
         echo Waiting until Multipass is up...
         # Ensure we can find multipass
-        PATH="/snap/bin:/usr/local/bin:/opt/homebrew/bin:/c/Program Files/Multipass/bin:/c/Program Files/Multipass:$PATH"
+        PATH="/snap/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
         while ! multipass list; do
           sleep 1
         done
