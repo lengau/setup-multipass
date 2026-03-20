@@ -5,7 +5,7 @@ on:
     - cron: "0 0 * * 1"
   pull_request:
   push:
-    branch:
+    branches:
       - main
 
   # Allows triggering the workflow manually from the Actions tab
@@ -51,7 +51,7 @@ jobs:
       - name: Collect multipass log (Linux)
         if: ${{ always() && runner.os == 'Linux' }}
         run: |
-          sudo journalctl --unit 'snap.multipass*' > ${{ runner.temp }}/multipassd.log
+          sudo journalctl --unit 'snap.multipass*' | sudo tee ${{ runner.temp }}/multipassd.log > /dev/null
       - name: Collect multipass log (macOS)
         if: ${{ always() && runner.os == 'macOS' }}
         run: |
@@ -62,10 +62,9 @@ jobs:
         shell: pwsh
         run: |
           Get-EventLog -LogName 'Windows Logs/Application' -Source Multipass > ${{ runner.temp }}/multipassd.log
-          sudo chown "${USER}" ${{ runner.temp }}/multipassd.log
       - name: Upload multipass log
         if: ${{ always()  }}
         uses: actions/upload-artifact@v4
         with:
-          name: multipass-log-${{ matrix.os }}-${{ job.check_run_id }}
+          name: multipass-log-${{ matrix.os }}-${{ github.run_id }}
           path: ${{ runner.temp }}/multipassd.log
