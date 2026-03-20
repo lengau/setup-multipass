@@ -13,10 +13,17 @@ runs:
       run: |
         sudo snap install multipass
         sudo chown "${USER}:$(groups | cut -d' ' -f1)" /var/snap/multipass/common/multipass_socket
+        echo "/snap/bin" >> $GITHUB_PATH
     - if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
         brew install --cask multipass
+        if [ -d "/usr/local/bin" ]; then
+          echo "/usr/local/bin" >> $GITHUB_PATH
+        fi
+        if [ -d "/opt/homebrew/bin" ]; then
+          echo "/opt/homebrew/bin" >> $GITHUB_PATH
+        fi
     - if: ${{ runner.os == 'Windows' }}
       shell: pwsh
       run: |
@@ -59,6 +66,11 @@ runs:
       shell: bash
       run: |
         multipass_passphrase=$(uuidgen)
+        # We need to wait for the daemon to be up before setting the passphrase
+        echo Waiting until Multipass is up...
+        while ! multipass list; do
+          sleep 1
+        done
         sudo multipass set local.passphrase=$multipass_passphrase
         while ! sudo multipass authenticate $multipass_passphrase; do
           sleep 1
