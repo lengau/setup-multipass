@@ -50,6 +50,8 @@ runs:
           # Try to enable Hyper-V
           Write-Host "Enabling Hyper-V..."
           dism.exe /online /enable-feature /featurename:Microsoft-Hyper-V-All /norestart
+          # Try to start Hyper-V service
+          sc.exe start vmms
           $msiPath = "${{ runner.temp }}\multipass.msi"
           Write-Host "Downloading Multipass..."
           curl -o $msiPath -L https://canonical.com/multipass/download/windows
@@ -74,6 +76,7 @@ runs:
               Write-Host "Found Multipass at $path"
               Add-Content -Path $env:GITHUB_PATH -Value "$path"
               # Set driver to hyperv
+              Write-Host "Setting driver to hyperv..."
               & "$path\multipass.exe" set local.driver=hyperv
               # Also add unix-style path for bash
               $unixPath = $path.Replace("\", "/").Replace("C:", "/c")
@@ -139,8 +142,8 @@ runs:
           sleep 1
         done
         multipass_passphrase=$(uuidgen)
-        # Try setting passphrase without sudo first, but don't fail if it fails
-        "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase || sudo -n "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase || true
+        # Try setting passphrase with sudo -n
+        sudo -n "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase || "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase || true
         # Authenticate with sudo, but don't fail if it fails
         sudo -n "$MULTIPASS_BIN" authenticate $multipass_passphrase || true
         sudo mv "$MULTIPASS_BIN" "${MULTIPASS_BIN}-real"
