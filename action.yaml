@@ -110,6 +110,14 @@ runs:
         Write-Host "Waiting until Multipass is up..."
         $maxWait = 300
         $elapsed = 0
+        # Update current process path again just in case
+        $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass", "${{ runner.temp }}\Multipass", "${{ runner.temp }}\Multipass\bin")
+        foreach ($path in $paths) {
+          if (Test-Path "$path\multipass.exe") {
+            $env:PATH = "$path;$env:PATH"
+            break
+          }
+        }
         while ($elapsed -lt $maxWait) {
           if (& multipass list 2>$null) {
             Write-Host "Multipass is up!"
