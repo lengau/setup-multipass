@@ -70,6 +70,10 @@ runs:
             if (Test-Path "$path\multipass.exe") {
               Write-Host "Found Multipass at $path"
               Add-Content -Path $env:GITHUB_PATH -Value "$path"
+              # Also add unix-style path for bash
+              $unixPath = $path.Replace("\", "/").Replace("C:", "/c")
+              Add-Content -Path $env:GITHUB_PATH -Value "$unixPath"
+              echo "MULTIPASS_DIR=$unixPath" >> $env:GITHUB_ENV
               $found = $true
               break
             }
