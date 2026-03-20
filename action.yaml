@@ -20,15 +20,8 @@ runs:
     - if: ${{ runner.os == 'Windows' }}
       shell: pwsh
       run: |
-        curl -o ${{ runner.temp }}\multipass.msi -L https://canonical.com/multipass/download/windows
-        $msiPath = "$($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("${{ runner.temp }}\multipass.msi"))"
-        Write-Host "Installing Multipass from $msiPath"
-        $process = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/i", "$msiPath", "/quiet", "/norestart"
-        if ($process.ExitCode -ne 0) {
-          Write-Host "msiexec /i failed with exit code $($process.ExitCode). Trying /a as fallback."
-          Start-Process msiexec.exe -Wait -ArgumentList "/a", "$msiPath", "/quiet", "/norestart"
-        }
-        $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass", "${{ runner.temp }}\Multipass", "${{ runner.temp }}\Multipass\bin")
+        winget install --id Canonical.Multipass --source winget --accept-package-agreements --accept-source-agreements --silent
+        $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass")
         foreach ($path in $paths) {
           if (Test-Path $path) {
             Write-Host "Found Multipass at $path"
