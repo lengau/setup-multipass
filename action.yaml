@@ -13,16 +13,16 @@ runs:
       run: |
         sudo snap install multipass
         sudo chown "${USER}:$(groups | cut -d' ' -f1)" /var/snap/multipass/common/multipass_socket
-        echo "/snap/bin" >> $GITHUB_PATH
+        echo "/snap/bin" >> "$GITHUB_PATH"
     - if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
         brew install --cask multipass
         if [ -d "/usr/local/bin" ]; then
-          echo "/usr/local/bin" >> $GITHUB_PATH
+          echo "/usr/local/bin" >> "$GITHUB_PATH"
         fi
         if [ -d "/opt/homebrew/bin" ]; then
-          echo "/opt/homebrew/bin" >> $GITHUB_PATH
+          echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
         fi
     - if: ${{ runner.os == 'Windows' }}
       shell: pwsh
@@ -55,6 +55,8 @@ runs:
       shell: bash
       run: |
         echo Waiting until Multipass is up...
+        # Ensure we can find multipass
+        PATH="/snap/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
         while ! multipass list; do
           sleep 1
         done
@@ -68,14 +70,15 @@ runs:
         multipass_passphrase=$(uuidgen)
         # We need to wait for the daemon to be up before setting the passphrase
         echo Waiting until Multipass is up...
-        while ! multipass list; do
+        # Use full path just in case
+        MULTIPASS_BIN=$(which multipass || echo "/usr/local/bin/multipass")
+        while ! "$MULTIPASS_BIN" list; do
           sleep 1
         done
-        sudo multipass set local.passphrase=$multipass_passphrase
-        while ! sudo multipass authenticate $multipass_passphrase; do
+        sudo "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase
+        while ! sudo "$MULTIPASS_BIN" authenticate $multipass_passphrase; do
           sleep 1
         done
-        MULTIPASS_BIN=$(which multipass)
         sudo mv "$MULTIPASS_BIN" "${MULTIPASS_BIN}-real"
         printf "#!/bin/bash\nexec /usr/bin/sudo -E \"${MULTIPASS_BIN}-real\" \"\$@\"" | sudo tee "$MULTIPASS_BIN"
         sudo chmod a+x "$MULTIPASS_BIN"
