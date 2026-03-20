@@ -21,14 +21,28 @@ runs:
       shell: pwsh
       run: |
         winget install --id Canonical.Multipass --source winget --accept-package-agreements --accept-source-agreements --silent
-        $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass")
-        foreach ($path in $paths) {
-          if (Test-Path $path) {
-            Write-Host "Found Multipass at $path"
-            "$path" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-            & "$path\multipass.exe" list
-            break
+        $maxRetries = 30
+        $retryCount = 0
+        $found = $false
+        while (-not $found -and $retryCount -lt $maxRetries) {
+          $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass")
+          foreach ($path in $paths) {
+            if (Test-Path "$path\multipass.exe") {
+              Write-Host "Found Multipass at $path"
+              "$path" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+              $found = $true
+              break
+            }
           }
+          if (-not $found) {
+            Write-Host "Waiting for Multipass to be installed... ($($retryCount + 1)/$maxRetries)"
+            Start-Sleep -Seconds 10
+            $retryCount++
+          }
+        }
+        if (-not $found) {
+          Write-Error "Multipass not found after installation."
+          exit 1
         }
     - if: ${{ inputs.wait == 'true' }}
       shell: bash
