@@ -88,6 +88,12 @@ runs:
           Write-Error "Multipass not found after installation."
           exit 1
         }
+    - if: ${{ runner.os == 'Windows' }}
+      shell: bash
+      run: |
+        # Ensure we add common paths to GITHUB_PATH in bash format
+        echo "/c/Program Files/Multipass/bin" >> "$GITHUB_PATH"
+        echo "/c/Program Files/Multipass" >> "$GITHUB_PATH"
     - if: ${{ inputs.wait == 'true' && runner.os == 'Windows' }}
       shell: pwsh
       run: |
