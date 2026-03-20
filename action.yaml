@@ -89,7 +89,7 @@ runs:
       run: |
         echo Waiting until Multipass is up...
         # Ensure we can find multipass
-        PATH="/snap/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
+        PATH="/snap/bin:/usr/local/bin:/opt/homebrew/bin:/c/Program Files/Multipass/bin:/c/Program Files/Multipass:$PATH"
         while ! multipass list; do
           sleep 1
         done
