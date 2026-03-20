@@ -69,7 +69,7 @@ runs:
           foreach ($path in $paths) {
             if (Test-Path "$path\multipass.exe") {
               Write-Host "Found Multipass at $path"
-              "$path" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+              Add-Content -Path $env:GITHUB_PATH -Value "$path"
               $found = $true
               break
             }
@@ -107,13 +107,10 @@ runs:
           sleep 1
         done
         multipass_passphrase=$(uuidgen)
-        # Try setting passphrase without sudo first
-        if ! "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase; then
-          sudo -n "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase
-        fi
-        while ! sudo -n "$MULTIPASS_BIN" authenticate $multipass_passphrase; do
-          sleep 1
-        done
+        # Try setting passphrase without sudo first, but don't fail if it fails
+        "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase || sudo -n "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase || true
+        # Authenticate with sudo, but don't fail if it fails
+        sudo -n "$MULTIPASS_BIN" authenticate $multipass_passphrase || true
         sudo mv "$MULTIPASS_BIN" "${MULTIPASS_BIN}-real"
         printf "#!/bin/bash\nexec /usr/bin/sudo -E \"${MULTIPASS_BIN}-real\" \"\$@\"" | sudo tee "$MULTIPASS_BIN"
         sudo chmod a+x "$MULTIPASS_BIN"
