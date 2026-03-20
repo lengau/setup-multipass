@@ -27,14 +27,16 @@ runs:
     - if: ${{ runner.os == 'Windows' }}
       shell: pwsh
       run: |
-        if (Get-Command winget -ErrorAction SilentlyContinue) {
-          Write-Host "Using winget to install Multipass"
-          winget install --id Canonical.Multipass --source winget --accept-package-agreements --accept-source-agreements --silent
-        } else {
-          Write-Host "winget not found, using msiexec"
-          curl -o ${{ runner.temp }}\multipass.msi -L https://canonical.com/multipass/download/windows
-          $msiPath = "$($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("${{ runner.temp }}\multipass.msi"))"
-          Start-Process msiexec.exe -Wait -ArgumentList "/i", "$msiPath", "/quiet", "/norestart"
+        $msiPath = "${{ runner.temp }}\multipass.msi"
+        Write-Host "Downloading Multipass..."
+        curl -o $msiPath -L https://canonical.com/multipass/download/windows
+        Write-Host "Installing Multipass..."
+        $process = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/i", "$msiPath", "/quiet", "/norestart"
+        if ($process.ExitCode -ne 0) {
+          Write-Host "msiexec /i failed with exit code $($process.ExitCode). Trying winget as fallback."
+          if (Get-Command winget -ErrorAction SilentlyContinue) {
+            winget install --id Canonical.Multipass --source winget --accept-package-agreements --accept-source-agreements --silent
+          }
         }
         $maxRetries = 30
         $retryCount = 0
@@ -75,16 +77,18 @@ runs:
       # Workaround for https://github.com/canonical/multipass/issues/4588
       shell: bash
       run: |
-        multipass_passphrase=$(uuidgen)
-        # We need to wait for the daemon to be up before setting the passphrase
-        echo Waiting until Multipass is up...
         # Use full path just in case
         MULTIPASS_BIN=$(which multipass || echo "/usr/local/bin/multipass")
+        echo Waiting until Multipass is up...
         while ! "$MULTIPASS_BIN" list; do
           sleep 1
         done
-        sudo "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase
-        while ! sudo "$MULTIPASS_BIN" authenticate $multipass_passphrase; do
+        multipass_passphrase=$(uuidgen)
+        # Try setting passphrase without sudo first
+        if ! "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase; then
+          sudo -n "$MULTIPASS_BIN" set local.passphrase=$multipass_passphrase
+        fi
+        while ! sudo -n "$MULTIPASS_BIN" authenticate $multipass_passphrase; do
           sleep 1
         done
         sudo mv "$MULTIPASS_BIN" "${MULTIPASS_BIN}-real"
