@@ -27,22 +27,45 @@ runs:
     - if: ${{ runner.os == 'Windows' }}
       shell: pwsh
       run: |
-        $msiPath = "${{ runner.temp }}\multipass.msi"
-        Write-Host "Downloading Multipass..."
-        curl -o $msiPath -L https://canonical.com/multipass/download/windows
-        Write-Host "Installing Multipass..."
-        $process = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/i", "$msiPath", "/quiet", "/norestart"
-        if ($process.ExitCode -ne 0) {
-          Write-Host "msiexec /i failed with exit code $($process.ExitCode). Trying winget as fallback."
-          if (Get-Command winget -ErrorAction SilentlyContinue) {
-            winget install --id Canonical.Multipass --source winget --accept-package-agreements --accept-source-agreements --silent
+        $multipassPath = $null
+        # Check if already in PATH
+        $cmd = Get-Command multipass -ErrorAction SilentlyContinue
+        if ($cmd) {
+          $multipassPath = Split-Path $cmd.Definition
+          Write-Host "Multipass already in PATH at $multipassPath"
+        }
+        # Check Registry
+        if (-not $multipassPath) {
+          $regPath = "HKLM:\SOFTWARE\Canonical\Multipass"
+          if (Test-Path $regPath) {
+            $multipassPath = Get-ItemProperty -Path $regPath -Name "InstallDir" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "InstallDir"
+            if ($multipassPath) {
+              Write-Host "Multipass found in Registry at $multipassPath"
+              if (Test-Path "$multipassPath\bin") { $multipassPath = "$multipassPath\bin" }
+            }
           }
         }
+        # Install if not found
+        if (-not $multipassPath) {
+          $msiPath = "${{ runner.temp }}\multipass.msi"
+          Write-Host "Downloading Multipass..."
+          curl -o $msiPath -L https://canonical.com/multipass/download/windows
+          Write-Host "Installing Multipass..."
+          $process = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/i", "$msiPath", "/quiet", "/norestart"
+          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 1638) { # 1638 is "already installed"
+            Write-Host "msiexec /i failed with exit code $($process.ExitCode). Trying winget as fallback."
+            if (Get-Command winget -ErrorAction SilentlyContinue) {
+              winget install --id Canonical.Multipass --source winget --accept-package-agreements --accept-source-agreements --silent
+            }
+          }
+        }
+        # Search again after installation
         $maxRetries = 30
         $retryCount = 0
         $found = $false
         while (-not $found -and $retryCount -lt $maxRetries) {
           $paths = @("C:\Program Files\Multipass\bin", "C:\Program Files\Multipass", "${{ runner.temp }}\Multipass", "${{ runner.temp }}\Multipass\bin")
+          if ($multipassPath) { $paths = @($multipassPath) + $paths }
           foreach ($path in $paths) {
             if (Test-Path "$path\multipass.exe") {
               Write-Host "Found Multipass at $path"
